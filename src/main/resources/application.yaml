@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    url: jdbc:postgresql://localhost:5432/scheduler
+    password: postgres
+  liquibase:
+    url: jdbc:postgresql://localhost:5432/scheduler
+    password: postgres
+    user: postgres
+    change-log: classpath:liquibase/db.changelog-master.xml
+
+bot:
+  name: Fernando Morris
+  token: 5406777483:AAFma6mcZXxlzZr1kg2jP8DLDh_2wvn5e5Y
+
+schedule:
+  universities:
+    Piter:
+    - Leti
+    - Itmo
+

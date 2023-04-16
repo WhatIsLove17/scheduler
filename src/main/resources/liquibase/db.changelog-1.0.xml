@@ -1,0 +1,101 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+
+    <changeSet id="1.0.0" author="whatislove">
+
+        <createTable tableName="student_groups">
+
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="group_name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="university" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+        </createTable>
+
+
+        <createTable tableName="students">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="chat_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="group_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+
+        <createTable tableName="subjects">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="start_time" type="time with time zone">
+                <constraints nullable="false"/>
+            </column>
+            <column name="week_day" type="smallserial">
+                <constraints nullable="false"/>
+            </column>
+            <column name="subject" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="teacher" type="varchar(255)"/>
+            <column name="group_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="classroom_number" type="varchar(10)"/>
+            <column name="week_parity" type="boolean"/>
+        </createTable>
+
+        <createTable tableName="student_schedule">
+
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="student_id" type="bigint"/>
+            <column name="day_of_week" type="int"/>
+            <column name="send_time" type="varchar(5)" defaultValue="07:00">
+                <constraints nullable="false"/>
+            </column>
+
+        </createTable>
+
+
+
+        <addForeignKeyConstraint baseTableName="student_schedule"
+                                 baseColumnNames="student_id"
+                                 constraintName="fk_student_schedule_student"
+                                 referencedTableName="students"
+                                 referencedColumnNames="id"/>
+
+
+        <addForeignKeyConstraint baseColumnNames="group_id"
+                                 baseTableName="students"
+                                 constraintName="students_group_id_fk"
+                                 referencedColumnNames="id"
+                                 referencedTableName="student_groups"/>
+
+
+        <addForeignKeyConstraint baseColumnNames="group_id"
+                                 baseTableName="subjects"
+                                 constraintName="subject_group_id_fk"
+                                 referencedColumnNames="id"
+                                 referencedTableName="student_groups"/>
+
+    </changeSet>
+    
+
+</databaseChangeLog>
+
+
