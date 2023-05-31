@@ -10,20 +10,19 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.sql.Time;
+
 @Data
 @AllArgsConstructor
-@Builder
 @NoArgsConstructor
-@Entity(name = "students")
-public class Student {
+@Builder
+@Entity(name = "user_schedule")
+public class UserSchedule {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long chatId;
-    private Long groupId;
-    private boolean isAdvance;
-    private String city;
-    private Long universityId;
-    private String faculty;
-    private Integer year;
+    private Long studentId;
+    private Long teacherId;
+    private Time notification;
 }

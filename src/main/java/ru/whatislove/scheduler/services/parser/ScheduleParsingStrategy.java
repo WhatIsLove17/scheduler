@@ -1,10 +1,11 @@
 package ru.whatislove.scheduler.services.parser;
 
-import ru.whatislove.scheduler.models.Subject;
 
 import java.io.IOException;
 import java.util.List;
 
+import ru.whatislove.scheduler.models.Discipline;
+
 public interface ScheduleParsingStrategy {
-    List<Subject> parse() throws IOException;
+    List<Discipline> parse() throws IOException;
 }

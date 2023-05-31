@@ -6,16 +6,22 @@
 
     <changeSet id="1.0.0" author="whatislove">
 
-        <createTable tableName="student_groups">
+        <createTable tableName="groups">
 
             <column name="id" type="bigint" autoIncrement="true">
-                <constraints primaryKey="true" nullable="false"/>
+                <constraints primaryKey="true"/>
             </column>
-            <column name="group_name" type="varchar(255)">
+            <column name="name" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="university" type="VARCHAR(255)">
+            <column name="university_id" type="bigint">
                 <constraints nullable="false"/>
+            </column>
+            <column name="year" type="smallint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="faculty" type="varchar(255)">
+                <constraints nullable="true"/>
             </column>
 
         </createTable>
@@ -23,78 +29,152 @@
 
         <createTable tableName="students">
             <column name="id" type="bigint" autoIncrement="true">
-                <constraints primaryKey="true" nullable="false"/>
-            </column>
-            <column name="name" type="varchar(255)">
-                <constraints nullable="false"/>
+                <constraints primaryKey="true"/>
             </column>
             <column name="chat_id" type="bigint">
                 <constraints nullable="false"/>
             </column>
             <column name="group_id" type="bigint">
-                <constraints nullable="false"/>
+                <constraints nullable="true"/>
+            </column>
+            <column name="is_advance" type="boolean"/>
+            <column name="city" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="university_id" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+            <column name="faculty" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="year" type="smallint">
+                <constraints nullable="true"/>
             </column>
         </createTable>
 
 
-        <createTable tableName="subjects">
-            <column name="id" type="bigint" autoIncrement="true">
-                <constraints primaryKey="true" nullable="false"/>
-            </column>
-            <column name="start_time" type="time with time zone">
-                <constraints nullable="false"/>
-            </column>
-            <column name="week_day" type="smallserial">
-                <constraints nullable="false"/>
-            </column>
-            <column name="subject" type="varchar(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="teacher" type="varchar(255)"/>
-            <column name="group_id" type="bigint">
-                <constraints nullable="false"/>
-            </column>
-            <column name="classroom_number" type="varchar(10)"/>
-            <column name="week_parity" type="boolean"/>
-        </createTable>
-
-        <createTable tableName="student_schedule">
-
+        <createTable tableName="teachers">
             <column name="id" type="bigint" autoIncrement="true">
                 <constraints primaryKey="true"/>
             </column>
-            <column name="student_id" type="bigint"/>
-            <column name="day_of_week" type="int"/>
-            <column name="send_time" type="varchar(5)" defaultValue="07:00">
+            <column name="chat_id" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="email" type="varchar(255)"/>
+            <column name="university_id" type="bigint">
                 <constraints nullable="false"/>
             </column>
+            <column name="is_advance" type="boolean"/>
+            <column name="key" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
 
+        <createTable tableName="universities">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="city" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="week_parity" type="smallint">
+                <constraints nullable="true"/>
+            </column>
         </createTable>
 
 
+        <createTable tableName="disciplines">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="group_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="week_day" type="smallint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="week_parity" type="smallint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="time" type="time">
+                <constraints nullable="false"/>
+            </column>
 
-        <addForeignKeyConstraint baseTableName="student_schedule"
-                                 baseColumnNames="student_id"
-                                 constraintName="fk_student_schedule_student"
-                                 referencedTableName="students"
-                                 referencedColumnNames="id"/>
+            <column name="teacher_id" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+            <column name="auditory" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
 
 
-        <addForeignKeyConstraint baseColumnNames="group_id"
-                                 baseTableName="students"
+        <createTable tableName="user_schedule">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="student_id" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+            <column name="teacher_id" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+            <column name="notification" type="time"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="students"
+                                 baseColumnNames="group_id"
                                  constraintName="students_group_id_fk"
                                  referencedColumnNames="id"
-                                 referencedTableName="student_groups"/>
+                                 referencedTableName="groups"/>
 
-
-        <addForeignKeyConstraint baseColumnNames="group_id"
-                                 baseTableName="subjects"
-                                 constraintName="subject_group_id_fk"
+        <addForeignKeyConstraint baseTableName="teachers"
+                                 baseColumnNames="university_id"
+                                 constraintName="teachers_university_id_fk"
                                  referencedColumnNames="id"
-                                 referencedTableName="student_groups"/>
+                                 referencedTableName="universities"/>
+
+        <addForeignKeyConstraint baseTableName="groups"
+                                 baseColumnNames="university_id"
+                                 constraintName="groups_university_id_fk"
+                                 referencedColumnNames="id"
+                                 referencedTableName="universities"/>
+
+        <addForeignKeyConstraint baseTableName="disciplines"
+                                 baseColumnNames="group_id"
+                                 constraintName="disciplines_group_id_fk"
+                                 referencedColumnNames="id"
+                                 referencedTableName="groups"/>
+
+        <addForeignKeyConstraint baseTableName="disciplines"
+                                 baseColumnNames="teacher_id"
+                                 constraintName="disciplines_teacher_id_fk"
+                                 referencedColumnNames="id"
+                                 referencedTableName="teachers"/>
+
+        <addForeignKeyConstraint baseTableName="user_schedule"
+                                 baseColumnNames="teacher_id"
+                                 constraintName="user_schedules_teacher_id_fk"
+                                 referencedColumnNames="id"
+                                 referencedTableName="teachers"/>
+
+        <addForeignKeyConstraint baseTableName="user_schedule"
+                                 baseColumnNames="student_id"
+                                 constraintName="user_schedules_student_id_fk"
+                                 referencedColumnNames="id"
+                                 referencedTableName="students"/>
 
     </changeSet>
-    
+
 
 </databaseChangeLog>
 

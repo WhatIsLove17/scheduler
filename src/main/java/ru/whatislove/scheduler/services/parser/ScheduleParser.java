@@ -1,10 +1,10 @@
 package ru.whatislove.scheduler.services.parser;
 
-import org.springframework.stereotype.Service;
-import ru.whatislove.scheduler.models.Subject;
-
 import java.io.IOException;
 import java.util.List;
+
+import org.springframework.stereotype.Service;
+import ru.whatislove.scheduler.models.Discipline;
 
 @Service
 public class ScheduleParser {
@@ -14,7 +14,7 @@ public class ScheduleParser {
         this.strategy = strategy;
     }
 
-    public List<Subject> parseSchedule() throws IOException {
+    public List<Discipline> parseSchedule() throws IOException {
         return strategy.parse();
     }
 }

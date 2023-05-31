@@ -1,69 +1,57 @@
 package ru.whatislove.scheduler.services.parser;
 
 
-import org.springframework.beans.factory.ListableBeanFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-import ru.whatislove.scheduler.config.ScheduleProperties;
-import ru.whatislove.scheduler.models.Subject;
-import ru.whatislove.scheduler.repository.StudentGroupRepository;
-import ru.whatislove.scheduler.repository.SubjectRepository;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.springframework.beans.factory.ListableBeanFactory;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import ru.whatislove.scheduler.models.Discipline;
+import ru.whatislove.scheduler.repository.DisciplineRepo;
+import ru.whatislove.scheduler.repository.GroupRepo;
 
 @Service
 public class ScheduleParseService {
 
     private final ScheduleParser scheduleParser;
 
-    private final ListableBeanFactory beanFactory;
-    private final ScheduleProperties properties;
     private final List<ScheduleParsingStrategy> parsers;
 
-    private final StudentGroupRepository studentGroupRepository;
+    private final GroupRepo groupRepo;
 
-    private final SubjectRepository subjectRepository;
+    private final DisciplineRepo disciplineRepo;
 
-
-    @Autowired
-    public ScheduleParseService(ListableBeanFactory beanFactory, ScheduleParser scheduleParser,
-                                ScheduleProperties properties, StudentGroupRepository studentGroupRepository,
-                                SubjectRepository subjectRepository){
-        this.properties = properties;
-        this.beanFactory = beanFactory;
+    public ScheduleParseService(ListableBeanFactory beanFactory, ScheduleParser scheduleParser, GroupRepo groupRepo,
+                                DisciplineRepo disciplineRepo) {
         this.scheduleParser = scheduleParser;
 
         parsers = new ArrayList<>(beanFactory.getBeansOfType(ScheduleParsingStrategy.class).values());
-        this.studentGroupRepository = studentGroupRepository;
-        this.subjectRepository = subjectRepository;
+        this.groupRepo = groupRepo;
+        this.disciplineRepo = disciplineRepo;
 
-        parseSchedule();
+        //parseSchedule();
     }
 
 
-    @Scheduled(cron = "0 0 1 * * ?")
+    @Scheduled(cron = "0 0 0 * * ?")
     public void parseSchedule() {
 
-        studentGroupRepository.deleteAll();
-        subjectRepository.deleteAll();
+        disciplineRepo.deleteAll();
 
-        for(ScheduleParsingStrategy parser : parsers){
+        for (ScheduleParsingStrategy parser : parsers) {
 
             scheduleParser.setStrategy(parser);
 
             try {
-                List<Subject> subjects = scheduleParser.parseSchedule();
-                subjectRepository.saveAll(subjects);
+                List<Discipline> subjects = scheduleParser.parseSchedule();
+                disciplineRepo.saveAll(subjects);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
 
         }
-
-
 
     }
 }
