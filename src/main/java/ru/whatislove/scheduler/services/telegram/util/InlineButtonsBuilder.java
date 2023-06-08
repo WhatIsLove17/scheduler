@@ -18,7 +18,7 @@ public class InlineButtonsBuilder {
 
     private List<InlineKeyboardButton> buttons;
     private List<List<InlineKeyboardButton>> keyboardRows;
-    private int chunk = 4;
+    private int chunk = 3;
 
     public static InlineButtonsBuilder builder() {
         return new InlineButtonsBuilder();
@@ -27,11 +27,16 @@ public class InlineButtonsBuilder {
     public InlineButtonsBuilder addButton(InlineKeyboardButton button) {
 
         buttons.add(button);
-        if (buttons.size() == 4) {
+        if (buttons.size() == chunk) {
             keyboardRows.add(buttons);
             buttons = new ArrayList<>();
         }
 
+        return this;
+    }
+
+    public InlineButtonsBuilder setChunk(int size) {
+        chunk = size;
         return this;
     }
 
@@ -41,7 +46,8 @@ public class InlineButtonsBuilder {
     }
 
     public InlineKeyboardMarkup build() {
-        return InlineKeyboardMarkup.builder().keyboard(keyboardRows).build();
+        keyboardRows.add(buttons);
+        return InlineKeyboardMarkup.builder().clearKeyboard().keyboard(keyboardRows).build();
     }
 
 }

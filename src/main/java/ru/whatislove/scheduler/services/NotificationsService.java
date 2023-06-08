@@ -4,20 +4,13 @@ import java.sql.Time;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import org.springframework.stereotype.Service;
 import ru.whatislove.scheduler.models.Student;
-import ru.whatislove.scheduler.models.Teacher;
+import ru.whatislove.scheduler.models.User;
 import ru.whatislove.scheduler.models.UserSchedule;
-import ru.whatislove.scheduler.repository.GroupRepo;
-import ru.whatislove.scheduler.repository.StudentRepo;
-import ru.whatislove.scheduler.repository.TeacherRepo;
-import ru.whatislove.scheduler.repository.UserScheduleRepo;
+import ru.whatislove.scheduler.repository.*;
 import ru.whatislove.scheduler.services.telegram.ShowScheduleService;
 import ru.whatislove.scheduler.services.telegram.util.ManageEntity;
 
@@ -27,43 +20,39 @@ public class NotificationsService {
     private final UserScheduleRepo userScheduleRepo;
     private final StudentRepo studentRepo;
     private final TeacherRepo teacherRepo;
+    private final UserRepo userRepo;
     private final ShowScheduleService showScheduleService;
     private final GroupRepo groupRepo;
 
 
     public NotificationsService(UserScheduleRepo userScheduleRepo, StudentRepo studentRepo,
                                 TeacherRepo teacherRepo,
-                                ShowScheduleService showScheduleService, GroupRepo groupRepo) {
+                                UserRepo userRepo, ShowScheduleService showScheduleService, GroupRepo groupRepo) {
         this.userScheduleRepo = userScheduleRepo;
         this.studentRepo = studentRepo;
         this.teacherRepo = teacherRepo;
+        this.userRepo = userRepo;
         this.showScheduleService = showScheduleService;
         this.groupRepo = groupRepo;
     }
 
-    public ManageEntity enableNotifications(Student student, Teacher teacher) {
-        Optional<UserSchedule> schedule;
-        if (student != null) {
-            schedule = userScheduleRepo.findByStudentId(student.getId());
-        } else {
-            schedule = userScheduleRepo.findByTeacherId(teacher.getId());
-        }
-        long chatId = student != null ? student.getChatId() : teacher.getChatId();
+    public ManageEntity enableNotifications(User user) {
+        var schedule = userScheduleRepo.findAllByUserId(user.getId());
 
-        if (schedule.isPresent()) {
-            userScheduleRepo.delete(schedule.get());
-            return new ManageEntity(chatId,"Уведомления выключены", null);
+        if (!schedule.isEmpty()) {
+            userScheduleRepo.deleteAllById(schedule.stream().map(UserSchedule::getId).toList());
+            return new ManageEntity(user.getChatId(), "Уведомления выключены", null);
         } else {
             var userSchedule = UserSchedule.builder()
-                    .studentId(student.getId())
+                    .userId(user.getId())
                     .notification(new Time(7, 0, 0))
                     .build();
             userScheduleRepo.save(userSchedule);
-            return new ManageEntity(chatId,"Уведомления включены", null);
+            return new ManageEntity(user.getChatId(), "Уведомления включены", null);
         }
     }
 
-    public boolean setTime(Student student, Teacher teacher, String time) {
+    public boolean setTime(User user, String time) {
 
         LocalTime parsedTime;
 
@@ -73,47 +62,41 @@ public class NotificationsService {
             return false;
         }
 
-        if (student != null) {
-            userScheduleRepo.deleteAllByStudentId(student.getId());
-        } else {
-            userScheduleRepo.deleteAllByTeacherId(teacher.getId());
-        }
+        userScheduleRepo.deleteAllByUserId(user.getId());
 
         var userSchedule = UserSchedule.builder()
-                .studentId(student != null ? student.getId() : null)
-                .teacherId(teacher != null ? teacher.getId() : null)
+                .userId(user.getId())
                 .notification(Time.valueOf(parsedTime))
                 .build();
         userScheduleRepo.save(userSchedule);
         return true;
     }
 
-    public void setIsAdvance(Student student, Teacher teacher, boolean isAdvance) {
-        if (student != null) {
-            student.setAdvance(isAdvance);
-            studentRepo.save(student);
-        } else {
+    public void setIsAdvance(User user, boolean isAdvance) {
+        if (user.getRole().equals("teacher")) {
+            var teacher = teacherRepo.findById(user.getRoleId()).get();
             teacher.setAdvance(isAdvance);
             teacherRepo.save(teacher);
+        } else {
+            var student = studentRepo.findById(user.getRoleId()).get();
+            student.setAdvance(isAdvance);
+            studentRepo.save(student);
         }
     }
 
-    private void sendUserSchedule(Student student, Teacher teacher, Map<Long, ManageEntity> allMessages) {
+    private void sendUserSchedule(User user, Map<Long, ManageEntity> allMessages) {
         String msg;
+        boolean isAdvance;
 
-        long chatId;
-
-        if (student != null) {
-            msg = student.isAdvance() ? showScheduleService.showTomorrowSchedule(student, teacher) :
-                    showScheduleService.showTodaySchedule(student, teacher);
-            chatId = student.getChatId();
+        if (user.getRole().equals("teacher")) {
+            isAdvance = teacherRepo.findById(user.getRoleId()).get().isAdvance();
         } else {
-            msg = teacher.isAdvance() ? showScheduleService.showTomorrowSchedule(student, teacher) :
-                    showScheduleService.showTodaySchedule(student, teacher);
-            chatId = teacher.getChatId();
+            isAdvance = studentRepo.findById(user.getRoleId()).get().isAdvance();
         }
+        msg = isAdvance ? showScheduleService.showTomorrowSchedule(user) :
+                showScheduleService.showTodaySchedule(user);
 
-        allMessages.put(chatId, new ManageEntity(chatId, msg, null));
+        allMessages.put(user.getChatId(), new ManageEntity(user.getChatId(), msg, null));
     }
 
     public Map<Long, ManageEntity> sendSchedule() {
@@ -123,29 +106,30 @@ public class NotificationsService {
                 Time.valueOf(LocalTime.now()));
 
         for (UserSchedule userSchedule : userSchedules) {
-            if (userSchedule.getStudentId() != null) {
-                sendUserSchedule(studentRepo.findById(userSchedule.getStudentId()).get(), null, messages);
-            } else {
-                sendUserSchedule(null, teacherRepo.findById(userSchedule.getTeacherId()).get(), messages);
-            }
+            sendUserSchedule(userRepo.findById(userSchedule.getUserId()).get(), messages);
         }
 
         return messages;
     }
 
-    public List<ManageEntity> sendMessage(String message, String groupStr, long universityId) {
-        var group = groupRepo.findByUniversityIdAndName(universityId, groupStr);
+    public List<ManageEntity> sendMessageToGroup(ManageEntity message, String groupStr, long universityId) {
+        var group = groupRepo.findById(Long.parseLong(groupStr));
 
         var students = studentRepo.findAllByUniversityIdAndGroupId(universityId, group.get().getId());
         List<ManageEntity> entityList = new ArrayList<>();
 
-        for(Student student : students) {
-            entityList.add(new ManageEntity(student.getChatId(), message, null));
+        for (Student student : students) {
+            message.setChatId(userRepo.findByRoleIdAndRole(student.getId(), "student").get().getChatId());
+            entityList.add(message);
         }
 
-        return  entityList;
+        return entityList;
     }
 
+    public List<ManageEntity> sendMessageToUser(ManageEntity message, long chatId) {
+        message.setChatId(chatId);
+        return List.of(message);
+    }
 
 
 }

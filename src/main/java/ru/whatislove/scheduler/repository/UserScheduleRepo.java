@@ -10,13 +10,10 @@ import ru.whatislove.scheduler.models.UserSchedule;
 
 public interface UserScheduleRepo extends CrudRepository<UserSchedule, Long> {
 
-    Optional<UserSchedule> findByStudentId(long studentId);
+    void deleteAllByUserId(long userId);
 
-    Optional<UserSchedule> findByTeacherId(long teacherId);
+    List<UserSchedule> findAllByUserId(long userId);
 
     List<UserSchedule> findAllByNotificationBetween(Time notification, Time notification2);
 
-    void deleteAllByStudentId(long studentId);
-
-    void deleteAllByTeacherId(long teacherId);
 }

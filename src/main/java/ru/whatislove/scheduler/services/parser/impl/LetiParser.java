@@ -86,7 +86,7 @@ public class LetiParser implements ScheduleParsingStrategy {
                     builder.append(teacher.get("surname").asText()).append(" ")
                             .append(teacher.get("name").asText()).append(" ")
                             .append(teacher.get("midname").asText());
-                    Teacher teacherForSave = new Teacher(null, null, builder.toString(),
+                    Teacher teacherForSave = new Teacher(null, builder.toString(),
                             teacher.get("email").asText(), university.getId(), false,
                             UUID.randomUUID().toString());
 

@@ -13,8 +13,7 @@ public enum Command {
     SCHEDULE_TOMORROW("/schedule_tomorrow"),
     SCHEDULE_WEEK("/schedule_week"),
     SEND_MESSAGE("/send_message"),
-    NON_COMMAND("fail");
-
+    SHOW_FILES("/show_files");
     private final String command;
 
     Command(String command) {
@@ -25,14 +24,14 @@ public enum Command {
         return command;
     }
 
-    public static CommandWrapper fromString(String command) {
+    public static CommandWrapper<Command> fromString(String command) {
         for (Command c : Command.values()) {
             if (command.contains(c.getCommand())) {
                 var list = new ArrayList<>(Arrays.stream(command.split(" ")).toList());
                 list.remove(0);
-                return new CommandWrapper(c, list);
+                return new CommandWrapper<>(c, list);
             }
         }
-        return new CommandWrapper(NON_COMMAND, null);
+        return null;
     }
 }

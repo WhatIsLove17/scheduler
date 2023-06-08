@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class CommandWrapper {
-    private Command command;
+public class CommandWrapper <T> {
+    private T command;
     private List<String> msg;
 }

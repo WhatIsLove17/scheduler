@@ -10,4 +10,8 @@ public interface DisciplineRepo extends CrudRepository<Discipline, Long> {
     List<Discipline> findAllByGroupIdAndWeekDay(long groupId, int weekDay);
 
     List<Discipline> findAllByTeacherIdAndWeekDay(long teacherId, int weekDay);
+
+    List<Discipline> findAllByTeacherId(long teacherId);
+
+    List<Discipline> findAllByGroupId(long groupId);
 }

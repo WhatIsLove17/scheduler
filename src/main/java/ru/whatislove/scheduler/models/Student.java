@@ -19,11 +19,11 @@ public class Student {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long chatId;
     private Long groupId;
     private boolean isAdvance;
     private String city;
     private Long universityId;
     private String faculty;
     private Integer year;
+    private String name;
 }
