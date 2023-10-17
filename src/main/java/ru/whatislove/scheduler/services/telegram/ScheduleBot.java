@@ -2,6 +2,7 @@ package ru.whatislove.scheduler.services.telegram;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,11 +11,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
-import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.send.SendSticker;
-import org.telegram.telegrambots.meta.api.methods.send.SendVideo;
+import org.telegram.telegrambots.meta.api.methods.send.*;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
+import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
@@ -69,7 +68,7 @@ public class ScheduleBot extends TelegramLongPollingBot {
             chatId = msg.getChatId();
             String txt = msg.getText() != null ? msg.getText() : msg.getCaption();
             next = commandService.executeCommand(ManageEntity.builder().message(txt).video(msg.getVideo())
-                    .document(msg.getDocument()).sticker(msg.getSticker()).build(), chatId);
+                    .document(msg.getDocument()).photos(msg.getPhoto()).sticker(msg.getSticker()).build(), chatId);
         }
 
         for (ManageEntity manageEntity : next) {
@@ -102,11 +101,25 @@ public class ScheduleBot extends TelegramLongPollingBot {
                 execute(sd);
             }
 
-            if (manageEntity.getMessage() != null) {
+            if (manageEntity.getMessage() != null && !manageEntity.getMessage().endsWith("null")) {
                 SendMessage sm = SendMessage.builder().chatId(manageEntity.getChatId())
                         .text(manageEntity.getMessage())
                         .replyMarkup(manageEntity.getKeyboardMarkup()).build();
                 execute(sm);
+            }
+
+            if (manageEntity.getPhotos() != null) {
+                var photos = manageEntity.getPhotos();
+                for(int i = 0; i < photos.size(); i++) {
+                    if (i == photos.size() - 1) {
+                        execute(SendPhoto.builder().photo(new InputFile(photos.get(i).getFileId()))
+                                .chatId(manageEntity.getChatId()).build());
+                    }
+                    else if (photos.get(i).getFileSize() > photos.get(i+1).getFileSize()) {
+                        execute(SendPhoto.builder().photo(new InputFile(photos.get(i).getFileId()))
+                                .chatId(manageEntity.getChatId()).build());
+                    }
+                }
             }
         } catch (Exception e) {
             throw new RuntimeException(e);

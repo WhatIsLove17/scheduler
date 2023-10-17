@@ -50,8 +50,6 @@ public class StudentCommandService {
 
     public List<ManageEntity> studentBranch(ManageEntity command, Student student, User user) {
 
-        var commandWrapper = Command.fromString(command.getMessage());
-
         if (!user.getWaitCommand().isEmpty()) {
             return switch (Objects.requireNonNull(StudentWaitCommand.fromString(user.getWaitCommand())).getCommand()) {
                 case WAIT_CITY -> setCity(command.getMessage(), student, user);
@@ -66,6 +64,8 @@ public class StudentCommandService {
                 case WAIT_RESOURCE -> showFiles(student, user, command.getMessage());
             };
         }
+
+        var commandWrapper = Command.fromString(command.getMessage());
 
         return switch (commandWrapper.getCommand()) {
             case NOTIFICATIONS -> enableNotifications(student);

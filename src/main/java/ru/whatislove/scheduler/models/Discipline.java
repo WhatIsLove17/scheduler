@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.sql.Time;
+import java.util.Objects;
 
 @Data
 @AllArgsConstructor
@@ -28,6 +29,18 @@ public class Discipline {
     private Long teacherId;
     private String auditory;
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Discipline that = (Discipline) o;
+        return weekDay == that.weekDay && weekParity == that.weekParity && Objects.equals(name, that.name) && Objects.equals(time, that.time) && Objects.equals(teacherId, that.teacherId) && Objects.equals(auditory, that.auditory);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, weekDay, weekParity, time, teacherId, auditory);
+    }
 }
 
 

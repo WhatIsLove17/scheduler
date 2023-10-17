@@ -2,10 +2,7 @@ package ru.whatislove.scheduler.services.telegram;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import org.apache.commons.compress.utils.Lists;
 import org.springframework.stereotype.Service;
@@ -109,22 +106,32 @@ public class ShowScheduleService {
         disciplineList = disciplineRepo.findAllByTeacherIdAndWeekDay(teacher.getId(),
                 weekDay.getValue());
 
-        final List<Group> groups;
-        groups = Lists.newArrayList(groupRepo.findAllById(disciplineList.stream()
+        final List<Group> groups = Lists.newArrayList(groupRepo.findAllById(disciplineList.stream()
                 .map(Discipline::getGroupId).toList()).iterator());
-        StringBuilder builder = new StringBuilder(weekDay.toString()).append(":\n");
+        Map<Discipline, List<String>> groupsByDiscipline = new HashMap<>();
 
-        disciplineList.stream().sorted(Comparator.comparing(Discipline::getTime)).forEach(
-                discipline -> {
-                    if (discipline.getWeekParity() == weekParity) {
-                        builder.append(" * ").append(discipline.getTime())
-                                .append(' ').append(discipline.getName()).append(' ').append(discipline.getAuditory())
-                                .append(" (").append(groups.stream().filter(g -> g.getId().equals(discipline.getGroupId()))
-                                        .map(Group::getName).findFirst().orElse(""))
-                                .append(") ").append('\n');
-                    }
-                }
-        );
+        disciplineList.stream().forEach(d -> {
+            var gr = groups.stream().filter(g -> g.getId().equals(d.getGroupId())).findFirst().get().getName();
+            groupsByDiscipline.putIfAbsent(d, new ArrayList<>());
+            groupsByDiscipline.get(d).add(gr);
+        });
+
+        StringBuilder builder = new StringBuilder("\uD83D\uDCC5 " + weekDay).append(":\n\n");
+
+        groupsByDiscipline.keySet().stream().sorted(Comparator.comparing(Discipline::getTime))
+                        .forEach(discipline -> {
+                            if (discipline.getWeekParity() == weekParity) {
+                                builder.append(" ⏰ ").append(discipline.getTime())
+                                        .append(' ').append(discipline.getName()).append("\n \uD83D\uDCDA ")
+                                        .append(discipline.getAuditory())
+                                        .append("\n \uD83C\uDF93 ");
+                                groupsByDiscipline.get(discipline)
+                                        .forEach(g -> builder.append(g + ", "));
+                                builder.delete(builder.length() - 2, builder.length());
+                                builder.append("\n\n");
+                            }
+                        });
+
 
         return builder.toString();
     }
